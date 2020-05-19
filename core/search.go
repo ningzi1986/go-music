@@ -11,6 +11,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/hu17889/go_spider/core/common/request"
 	"github.com/hu17889/go_spider/core/downloader"
@@ -24,7 +25,8 @@ type Songs struct {
 	Index int
 }
 
-var r = regexp.MustCompile(`javascript:follow\('([^']*)'\)`)
+//var r = regexp.MustCompile(`javascript:follow\('([^']*)'\)`)
+var r = regexp.MustCompile(`\?v=(.*)`)
 
 var headers = http.Header{
 	"User-Agent":      []string{"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36"},
@@ -64,7 +66,7 @@ func Search(songsName string) ([]*Songs, error) {
 
 		one := htmlquery.FindOne(n, `a`)
 		name := strings.Replace(htmlquery.InnerText(one), " ", "", -1)
-		onclick := htmlquery.SelectAttr(one, "onclick")
+		onclick := htmlquery.SelectAttr(one, "href")
 
 		submatch := r.FindAllStringSubmatch(onclick, -1)
 		if len(submatch) > 0 && len(submatch[0]) > 1 {
@@ -104,13 +106,17 @@ func Find(index int, songs []*Songs) (*Songs, error) {
 
 }
 
-
-
 func DownLoad(song *Songs, dir string) (string, error) {
 
 	url := fmt.Sprintf("http://mp34.butterfly.mopaasapp.com/?v=%s", song.Md5)
 
-	requ := request.NewRequest(url, "html", "", "GET", "", headers, nil, nil, nil)
+	cookie := &http.Cookie{
+		Name:    "x09",
+		Value:   "x09",
+		Expires: time.Now().Add(time.Second * 3600),
+	}
+
+	requ := request.NewRequest(url, "html", "", "GET", "", headers, []*http.Cookie{cookie}, nil, nil)
 	page := downloader.NewHttpDownloader().Download(requ)
 
 	if !page.IsSucc() {

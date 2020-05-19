@@ -80,7 +80,7 @@ func main() {
 				goto B
 			}
 
-			fmt.Println("准备下载", song.Name)
+			fmt.Println("准备下载", song)
 			filename, err := core.DownLoad(song, dir)
 
 			if err != nil {
